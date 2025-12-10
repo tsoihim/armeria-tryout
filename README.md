@@ -1,14 +1,31 @@
-# armeria-tryout
+## Project Zoro
+Personal WebFlux practice
+</br></br>
 
-### About
-This is a tryout for Armeria + WebFlux
-</br>
-</br>
+## Goal
+Implement CRUD using WebFlux
+</br></br>
 
-### References
-example
-- https://github.com/line/armeria-examples/tree/main/spring-boot-webflux
- 
-doc : 
-- https://armeria.dev/docs/advanced-spring-webflux-integration
-- https://armeria.dev/docs/server-grpc/
+## APIs
+Check Swagger
+
+- GET
+    - /devices
+    - /devices/{id}
+
+- POST
+    - /devices
+
+- PUT
+    - /devices/{id}
+
+- DELETE
+    - /devices/{id}
+
+</br>
+All media types are application/json
+</br></br>
+
+## References
+- a
+- b
