@@ -1,48 +1,51 @@
 package io.github.tsoihim;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class DeviceService {
 
     private final DeviceRepository deviceRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public Flux<DeviceDTO> fetchDevices() {
-        return deviceRepository.findAll()
-                .map(v -> objectMapper.convertValue(v, DeviceDTO.class));
+    public List<DeviceDTO> fetchDevices() {
+        return deviceRepository.findAll().stream()
+                .map(DeviceDTO::from).toList();
     }
 
-    public Mono<DeviceDTO> fetchDevice(Long id) {
+    public DeviceDTO fetchDevice(Long id) {
         return deviceRepository.findById(id)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                .map(v -> objectMapper.convertValue(v, DeviceDTO.class));
+                .map(DeviceDTO::from)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    public Mono<DeviceDTO> createDevice(DeviceDTO.DeviceCreateDTO createDTO) {
-        return deviceRepository.save(new Device(null, createDTO.getName()))
-                .map(v -> objectMapper.convertValue(v, DeviceDTO.class));
+    @Transactional
+    public DeviceDTO createDevice(DeviceDTO.DeviceCreateDTO createDTO) {
+        Device device = new Device();
+        device.setName(createDTO.getName());
+        deviceRepository.save(device);
+        return DeviceDTO.from(device);
     }
 
-    // 변환 로직이 Mono, Flux를 포함하면 flatMap, 그렇지 않다면 map
-    public Mono<DeviceDTO> updateDevice(Long id, DeviceDTO.DeviceUpdateDTO updateDTO) {
-        return deviceRepository.findById(id)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                .flatMap(v -> deviceRepository.save(new Device(id, updateDTO.getName())))
-                .map(v -> objectMapper.convertValue(v, DeviceDTO.class));
+    @Transactional
+    public DeviceDTO updateDevice(Long id, DeviceDTO.DeviceUpdateDTO updateDTO) {
+        Device device = deviceRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        device.setName(updateDTO.getName());
+        return DeviceDTO.from(device);
     }
 
-    public Mono<Void> deleteDevice(Long id) {
-        return deviceRepository.findById(id)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                .flatMap(v -> deviceRepository.deleteById(id));
+    @Transactional
+    public void deleteDevice(Long id) {
+        deviceRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        deviceRepository.deleteById(id);
     }
 
 }

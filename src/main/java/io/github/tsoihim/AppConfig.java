@@ -1,43 +1,42 @@
 package io.github.tsoihim;
 
-import com.linecorp.armeria.client.ClientFactory;
-import com.linecorp.armeria.client.circuitbreaker.CircuitBreakerClient;
-import com.linecorp.armeria.client.circuitbreaker.CircuitBreakerRule;
 import com.linecorp.armeria.server.docs.DocService;
+import com.linecorp.armeria.server.healthcheck.HealthChecker;
 import com.linecorp.armeria.server.logging.AccessLogWriter;
 import com.linecorp.armeria.server.logging.LoggingService;
+import com.linecorp.armeria.server.tomcat.TomcatService;
 import com.linecorp.armeria.spring.ArmeriaServerConfigurator;
-import com.linecorp.armeria.spring.web.reactive.ArmeriaClientConfigurator;
+import org.apache.catalina.connector.Connector;
+import org.springframework.boot.web.embedded.tomcat.TomcatWebServer;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AppConfig {
-    @Bean
-    public ArmeriaServerConfigurator armeriaServerConfigurator() {
-        return builder -> {
-            builder.serviceUnder("/docs", new DocService());
-            builder.decorator(LoggingService.newDecorator());
-            builder.accessLogWriter(AccessLogWriter.combined(), false);
-        };
+
+    public static Connector getConnector(ServletWebServerApplicationContext applicationContext) {
+        final TomcatWebServer container = (TomcatWebServer) applicationContext.getWebServer();
+        container.start();
+        return container.getTomcat().getConnector();
     }
 
     @Bean
-    public ClientFactory clientFactory() {
-        return ClientFactory.insecure();
+    public HealthChecker tomcatConnectorHealthChecker(ServletWebServerApplicationContext applicationContext) {
+        final Connector connector = getConnector(applicationContext);
+        return () -> connector.getState().isAvailable();
     }
 
     @Bean
-    public ArmeriaClientConfigurator armeriaClientConfigurator(ClientFactory clientFactory) {
-        return builder -> {
-            final CircuitBreakerRule rule = CircuitBreakerRule.builder()
-                    .onServerErrorStatus()
-                    .onException()
-                    .thenFailure();
-            builder.decorator(CircuitBreakerClient.builder(rule)
-                    .newDecorator());
+    public TomcatService tomcatService(ServletWebServerApplicationContext applicationContext) {
+        return TomcatService.of(getConnector(applicationContext));
+    }
 
-            builder.factory(clientFactory);
-        };
+    @Bean
+    public ArmeriaServerConfigurator armeriaServiceInitializer(TomcatService tomcatService) {
+        return sb -> sb.serviceUnder("/", tomcatService)
+                .decorator(LoggingService.newDecorator())
+                .serviceUnder("/docs", new DocService())
+                .accessLogWriter(AccessLogWriter.combined(), false);
     }
 }
