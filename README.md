@@ -33,9 +33,11 @@ Check Armeria Doc Service UI (http://[IP]:[PORT]/docs/#/)
 ## References
 WebFlux
 - https://docs.spring.io/spring-framework/reference/web/webflux/new-framework.html
+
 WebFlux + Armeria
 - https://armeria.dev/docs/advanced/spring-webflux-integration/
 - https://github.com/line/armeria-examples/tree/main/spring-boot-webflux
+
 MVC + Armeria
 - https://armeria.dev/docs/advanced/spring-boot-integration/
 - https://github.com/line/armeria-examples/tree/main/spring-boot-tomcat
