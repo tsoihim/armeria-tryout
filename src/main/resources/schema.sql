@@ -2,6 +2,3 @@ CREATE TABLE IF NOT EXISTS device (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL
 );
-
-INSERT INTO device (name) VALUES ('Darwin');
-INSERT INTO device (name) VALUES ('Newton');

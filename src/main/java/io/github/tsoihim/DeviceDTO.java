@@ -9,4 +9,17 @@ public class DeviceDTO {
 
     private String name;
 
+    @Data
+    public static class DeviceCreateDTO {
+
+        private String name;
+
+    }
+
+    @Data
+    public static class DeviceUpdateDTO {
+
+        private String name;
+
+    }
 }

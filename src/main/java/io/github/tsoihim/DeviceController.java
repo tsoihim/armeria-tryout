@@ -1,9 +1,7 @@
 package io.github.tsoihim;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,8 +18,24 @@ public class DeviceController {
     }
 
     @GetMapping("/devices/{deviceId}")
-    Mono<DeviceDTO> getDevices(@PathVariable Long deviceId) {
+    Mono<DeviceDTO> getDevice(@PathVariable Long deviceId) {
         return deviceService.fetchDevice(deviceId);
+    }
+
+    @PostMapping("/devices")
+    Mono<DeviceDTO> createDevice(@RequestBody DeviceDTO.DeviceCreateDTO createDTO) {
+        return deviceService.createDevice(createDTO);
+    }
+
+    @PutMapping("/devices/{deviceId}")
+    Mono<DeviceDTO> updateDevice(@PathVariable Long deviceId,
+                                 @RequestBody DeviceDTO.DeviceUpdateDTO updateDTO) {
+        return deviceService.updateDevice(deviceId, updateDTO);
+    }
+
+    @DeleteMapping("/devices/{deviceId}")
+    Mono<Void> deleteDevice(@PathVariable Long deviceId) {
+        return deviceService.deleteDevice(deviceId);
     }
 
 }
